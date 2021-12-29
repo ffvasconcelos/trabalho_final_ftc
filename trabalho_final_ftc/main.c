@@ -161,8 +161,61 @@ void lerafd()
     }
 }
 
-int main()
+char delta(int transicoes[][3], char* input, int tam, int estado_atual) {
+    int letra = *input - '0';
+
+    if(transicoes[estado_atual][letra] == -1) {
+        return '0';
+    } else {
+        if(tam != 0) {
+            return delta(transicoes, input + 1, tam - 1, transicoes[estado_atual][letra]);
+        } else {
+            if(transicoes[estado_atual][2] == 1) {
+                return '1';
+            } else {
+                return '0';
+            }
+        }
+    }
+}
+
+int** complemento(int transicoes[][3], int qtd_estados) {
+    int i;
+    int afd_complemento[qtd_estados][3];
+
+    for(i = 0; i++; i < qtd_estados){
+        afd_complemento[i][0] = transicoes[i][0];
+        afd_complemento[i][1] = transicoes[i][1];
+        if(transicoes[i][2] == 1) {
+            afd_complemento[i][2] == 0;
+        } else {
+            afd_complemento[i][2] == 1;
+        }
+    }
+    return afd_complemento;
+}
+
+void ler_palavra(char* palavras, char* saida, int** afd) {
+
+    //Abertura de arquivos para leitura das palavras e saída de resultados
+    FILE *arq = fopen(palavras, "rt");
+    FILE *resultados = fopen(saida, "wt");
+
+    if(arq == NULL){
+        printf("Erro ao abrir arquivo com as palavras");
+        return;
+    }
+
+    //Fazer um while que tem uma chamada da funcao delta, que pega cada palavra do arquivo, aplica nela e escreve o resultado na saida
+
+}
+
+int main(int argc, char* argv[])
 {
-    lerafd();
+    int matriz[2][3] = {{1, 0, 0}, {1, 0, 1}};
+    char* palavra = "00010";
+
+    //printf("%c", delta(matriz, palavra, strlen(palavra), 0));
+    //lerafd();
     return 0;
 }
