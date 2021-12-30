@@ -17,11 +17,27 @@ typedef struct
     Alfabeto *consumo;
     Estado *destino;
 } transicao;
-
-void lerafd()
+typedef struct
 {
-    int qtdEstados, tamAlfabeto, qtdTransicoes, qtdFinais;
-    FILE *fp = fopen("test.txt", "r");
+    Estado *estados;
+    Alfabeto *alfabeto;
+    transicao *transicoes;
+} AFD;
+char *stringFinais(AFD afd, int qtdEstados)
+{
+    char *str;
+    for (int i = 0; i < qtdEstados; i++)
+        if (afd.estados[i].final == 1)
+        {
+            str = (char *)malloc(strlen(afd.estados[i].nomeEstado) * sizeof(char));
+            strcat(str, afd.estados[i].nomeEstado);
+            strcat(str, " ");
+        }
+    return str;
+}
+void lerafd(int *qtdEstados, int *tamAlfabeto, int *qtdTransicoes, int *qtdFinais, AFD *afd)
+{
+    FILE *fp = fopen("test2.txt", "r");
     char ch = getc(fp);
     char linha[200];
     int indice = 0;
@@ -33,10 +49,11 @@ void lerafd()
         ch = getc(fp);
     }
     linha[indice] = '\0';
-    qtdEstados = atoi(linha);
+    *qtdEstados = atoi(linha);
     ch = getc(fp);
-    Estado estados[qtdEstados];
-    for (int i = 0; i < qtdEstados; i++)
+    //Estado estados[*qtdEstados];
+    afd->estados = (Estado *)malloc(*qtdEstados * sizeof(Estado));
+    for (int i = 0; i < *qtdEstados; i++)
     {
         indice = 0;
         while (ch != '\n')
@@ -47,7 +64,7 @@ void lerafd()
         linha[++indice] = '\0';
         indice = 0;
         ch = getc(fp);
-        strcpy(estados[i].nomeEstado, linha);
+        strcpy(afd->estados[i].nomeEstado, linha);
     }
 
     //Lê o alfabeto e armaneza em estruturas
@@ -58,11 +75,11 @@ void lerafd()
         ch = getc(fp);
     }
     linha[indice] = '\0';
-    tamAlfabeto = atoi(linha);
-    Alfabeto alfabeto[tamAlfabeto];
-    for (int i = 0; i < tamAlfabeto; i++)
+    *tamAlfabeto = atoi(linha);
+    afd->alfabeto = (Alfabeto *)malloc(*tamAlfabeto * sizeof(Alfabeto));
+    for (int i = 0; i < *tamAlfabeto; i++)
     {
-        alfabeto[i].elementoAlfabeto = getc(fp);
+        afd->alfabeto[i].elementoAlfabeto = getc(fp);
         ch = getc(fp);
     }
     ch = getc(fp);
@@ -75,11 +92,11 @@ void lerafd()
         ch = getc(fp);
     }
     linha[indice] = '\0';
-    qtdTransicoes = atoi(linha);
-    transicao transicoes[qtdTransicoes];
+    *qtdTransicoes = atoi(linha);
+    afd->transicoes = (transicao *)malloc(*qtdTransicoes * sizeof(transicao));
     indice = 0;
     ch = getc(fp);
-    for (int i = 0; i < qtdTransicoes; i++)
+    for (int i = 0; i < *qtdTransicoes; i++)
     {
         //Lê a linha inteira
         indice = 0;
@@ -99,35 +116,28 @@ void lerafd()
         while (linha[j] != ' ')
             aux[k++] = linha[j++];
         aux[k] = '\0';
-        for (int a = 0; a < qtdEstados; a++)
-            if (strcmp(estados[a].nomeEstado, aux) == 0)
-                transicoes[i].origem = &estados[a];
+        for (int a = 0; a < *qtdEstados; a++)
+            if (strcmp(afd->estados[a].nomeEstado, aux) == 0)
+                afd->transicoes[i].origem = &afd->estados[a];
         j++;
         k = 0;
 
         while (linha[j] != ' ')
             aux[k++] = linha[j++];
         aux[k] = '\0';
-        for (int a = 0; a < tamAlfabeto; a++)
-            if (alfabeto[a].elementoAlfabeto == aux[0])
-                transicoes[i].consumo = &alfabeto[a];
+        for (int a = 0; a < *tamAlfabeto; a++)
+            if (afd->alfabeto[a].elementoAlfabeto == aux[0])
+                afd->transicoes[i].consumo = &afd->alfabeto[a];
         j++;
         k = 0;
 
         while (linha[j] != '\0')
             aux[k++] = linha[j++];
         aux[k] = '\0';
-        for (int a = 0; a < qtdEstados; a++)
-            if (strcmp(estados[a].nomeEstado, aux) == 0)
-                transicoes[i].destino = &estados[a];
+        for (int a = 0; a < *qtdEstados; a++)
+            if (strcmp(afd->estados[a].nomeEstado, aux) == 0)
+                afd->transicoes[i].destino = &afd->estados[a];
     }
-
-    //for (int b = 0; b < qtdEstados; b++)
-    //  printf("\n%s\n", estados[b].nomeEstado);
-    //for (int b = 0; b < tamAlfabeto; b++)
-    //  printf("\n%c", alfabeto[b].elementoAlfabeto);
-    //for (int b = 0; b < qtdTransicoes; b++)
-    //  printf("\n%s - %c - %s", transicoes[b].origem->nomeEstado, transicoes[b].consumo->elementoAlfabeto, transicoes[b].destino->nomeEstado);
 
     //Lê o estado inicial e armaneza em estruturas
     indice = 0;
@@ -138,17 +148,13 @@ void lerafd()
     }
     linha[indice] = '\0';
     ch = getc(fp);
-    for (int i = 0; i < qtdEstados; i++)
+    for (int i = 0; i < *qtdEstados; i++)
     {
-        if (strcmp(estados[i].nomeEstado, linha) == 0)
-            estados[i].inicial = 1;
+        if (strcmp(afd->estados[i].nomeEstado, linha) == 0)
+            afd->estados[i].inicial = 1;
         else
-            estados[i].inicial = 0;
+            afd->estados[i].inicial = 0;
     }
-    for (int i = 0; i < qtdEstados; i++)
-        if (estados[i].inicial == 1)
-            printf("\n%s", estados[i].nomeEstado);
-
     //Lê os estados finais e armaneza em estruturas
     indice = 0;
     while (ch != '\n')
@@ -157,10 +163,10 @@ void lerafd()
         ch = getc(fp);
     }
     linha[indice] = '\0';
-    qtdFinais = atoi(linha);
+    *qtdFinais = atoi(linha);
     indice = 0;
     ch = getc(fp);
-    for (int i = 0; i < qtdFinais; i++)
+    for (int i = 0; i < *qtdFinais; i++)
     {
         while (ch != '\n')
         {
@@ -168,16 +174,35 @@ void lerafd()
             ch = getc(fp);
         }
         linha[indice] = '\0';
-        for (int i = 0; i < qtdEstados; i++)
+        for (int i = 0; i < *qtdEstados; i++)
         {
-            if (strcmp(estados[i].nomeEstado, linha) == 0)
-                estados[i].final = 1;
+            if (strcmp(afd->estados[i].nomeEstado, linha) == 0)
+                afd->estados[i].final = 1;
             else
-                estados[i].final = 0;
+                afd->estados[i].final = 0;
         }
         indice = 0;
         ch = getc(fp);
     }
+}
+
+void escreveDot(char nome[], int qtdTrasicoes, AFD afd, int qtdEstados)
+{
+    char *str = stringFinais(afd, qtdEstados);
+    FILE *arq = fopen(nome, "w");
+    if (arq != NULL)
+    {
+        fprintf(arq, "digraph finite_state_machine {\n"
+                     "\trankdir=LR;\n\tsize=\"10\"\n"
+                     "\tnode [shape = doublecircle]; %s;",
+                str);
+        //funçao que escreve valores finais
+        fprintf(arq, "\n\tnode [shape = circle]");
+        for (int i = 0; i < qtdTrasicoes; i++)
+            fprintf(arq, "\n\t%s -> %s [label = %c ];", afd.transicoes[i].origem, afd.transicoes[i].destino, afd.transicoes[i].consumo->elementoAlfabeto);
+        fprintf(arq, "\n\t}");
+    }
+    fclose(arq);
 }
 char delta(int transicoes[][3], char *input, int tam, int estado_atual)
 {
@@ -246,10 +271,13 @@ void ler_palavra(char *palavras, char *saida, int **afd)
 
 int main(int argc, char *argv[])
 {
-    int matriz[2][3] = {{1, 0, 0}, {1, 0, 1}};
-    char *palavra = "00010";
+    //int matriz[2][3] = {{1, 0, 0}, {1, 0, 1}};
+    //char *palavra = "00010";
 
     //printf("%c", delta(matriz, palavra, strlen(palavra), 0));
-    lerafd();
+    int qtdEstados, tamAlfabeto, qtdTransicoes, qtdFinais;
+    AFD afd;
+    lerafd(&qtdEstados, &tamAlfabeto, &qtdTransicoes, &qtdFinais, &afd);
+    escreveDot("nome.dot", qtdTransicoes, afd, qtdEstados);
     return 0;
 }
