@@ -204,32 +204,45 @@ void escreveDot(char nome[], int qtdTrasicoes, AFD afd, int qtdEstados)
     }
     fclose(arq);
 }
-char delta(int transicoes[][3], char *input, int tam, int estado_atual)
+char delta(transicao* transicoes, int qtd_transicoes, char *input, int tam, Estado* estado_atual)
 {
-    int letra = *input - '0';
+    int i;
+    transicao tran;
 
-    if (transicoes[estado_atual][letra] == -1)
-    {
+    if(tam != 0) {
+        for(i = 0; i < qtd_transicoes; i++){
+        tran = *(transicoes + i);
+        if(tran.origem == estado_atual && tran.consumo == *input) {
+            return delta(transicoes, qtd_transicoes, input + 1, tam - 1, tran.destino);
+        }
+    }
         return '0';
-    }
-    else
-    {
-        if (tam != 0)
-        {
-            return delta(transicoes, input + 1, tam - 1, transicoes[estado_atual][letra]);
-        }
-        else
-        {
-            if (transicoes[estado_atual][2] == 1)
-            {
-                return '1';
-            }
-            else
-            {
-                return '0';
-            }
+    } else {
+        if(estado_atual->final == 1){
+            return '1';
+        } else {
+            return '0';
         }
     }
+}
+
+Estado* complemento(Estado* estados, int qtd_estados) {
+    int i;
+    Estado saida[qtd_estados];
+    Estado est;
+
+    for(i = 0;i < qtd_estados; i++) {
+        est = *(estados + i);
+        strcpy(saida[i].nomeEstado, est.nomeEstado);
+        saida[i].inicial = est.inicial;
+        if(est.final == 1) {
+            saida[i].final = 0;
+        } else {
+            saida[i].final = 1;
+        }
+    }
+
+    return saida;
 }
 
 // int **complemento(int transicoes[][3], int qtd_estados)
