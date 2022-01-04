@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "stdio_ext.h": "c"
+        "stdio_ext.h": "c",
+        "cstdlib": "c"
     }
 }

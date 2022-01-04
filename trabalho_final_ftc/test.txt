@@ -5,10 +5,10 @@ impar
 0
 1
 4
-par 0 impar
+par 0 par
 par 1 impar
+impar 1 impar
 impar 0 par
-impar 1 par
 par
 1
 par
