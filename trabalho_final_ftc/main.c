@@ -27,8 +27,8 @@ typedef struct
     int tamAlfabeto;
     int qtdTransicoes;
     int qtdFinais;
-
 } AFD;
+
 char *stringFinais(AFD afd)
 {
     char *str;
@@ -58,7 +58,6 @@ void lerafd(AFD *afd)
     linha[indice] = '\0';
     afd->qtdEstados = atoi(linha);
     ch = getc(fp);
-    //Estado estados[*qtdEstados];
     afd->estados = (Estado *)malloc(afd->qtdEstados * sizeof(Estado));
     for (int i = 0; i < afd->qtdEstados; i++)
     {
@@ -194,7 +193,7 @@ void lerafd(AFD *afd)
 void escreveDot(char nome[], AFD afd)
 {
     char *str = stringFinais(afd);
-    FILE *arq = fopen(nome, "w");
+    FILE *arq = fopen(nome, "wt");
     if (arq != NULL)
     {
         fprintf(arq, "digraph finite_state_machine {\n"
@@ -206,6 +205,31 @@ void escreveDot(char nome[], AFD afd)
         for (int i = 0; i < afd.qtdTransicoes; i++)
             fprintf(arq, "\n\t%s -> %s [label = %c ];", afd.transicoes[i].origem, afd.transicoes[i].destino, afd.transicoes[i].consumo->elementoAlfabeto);
         fprintf(arq, "\n\t}");
+    }
+    fclose(arq);
+}
+
+void escreveTxt(AFD afd, char *nome)
+{
+    FILE *arq = fopen(nome, "wt");
+    if (arq != NULL)
+    {
+        fprintf(arq, "%d\n", afd.qtdEstados);
+        for (int i = 0; i < afd.qtdEstados; i++)
+            fprintf(arq, "%s\n", afd.estados[i].nomeEstado);
+        fprintf(arq, "%d\n", afd.tamAlfabeto);
+        for (int i = 0; i < afd.tamAlfabeto; i++)
+            fprintf(arq, "%c\n", afd.alfabeto[i].elementoAlfabeto);
+        fprintf(arq, "%d\n", afd.qtdTransicoes);
+        for (int i = 0; i < afd.qtdTransicoes; i++)
+            fprintf(arq, "%s %c %s\n", afd.transicoes[i].origem, afd.transicoes[i].consumo->elementoAlfabeto, afd.transicoes[i].destino);
+        for (int i = 0; i < afd.qtdEstados; i++)
+            if (afd.estados[i].inicial == 1)
+                fprintf(arq, "%s\n", afd.estados[i].nomeEstado);
+        fprintf(arq, "%d\n", afd.qtdFinais);
+        for (int i = 0; i < afd.qtdFinais; i++)
+            if (afd.estados[i].final == 1)
+                fprintf(arq, "%s\n", afd.estados[i].nomeEstado);
     }
     fclose(arq);
 }
@@ -272,12 +296,25 @@ void reconheceEscreveArquivo(char *palavras, char *saida, AFD afd)
     fclose(resultados);
 }
 
-void Decide(char *argv[], int n, AFD *afd)
+void Decide(int argc, char *argv[], int n, AFD *afd)
 {
-    if (strcpy(argv[n], "--complemento") == 0)
-        complemento(afd);
-    else if (strcpy(argv[n], "--reconhecer") == 0)
-        reconheceEscreveArquivo(argv[n + 1], argv[n + 2], *afd);
+    if (argc == 5 || argc == 6)
+    {
+        if ((strcmp(argv[n], "--complemento") == 0) && (strcmp(argv[n + 2], "--output") == 0))
+        {
+            complemento(afd);
+            escreveTxt(*afd, "te.txt");
+            return;
+        }
+        else if ((strcmp(argv[n], "--reconhecer") == 0) && (strcmp(argv[n + 3], "--output") == 0))
+        {
+            reconheceEscreveArquivo(argv[n + 2], argv[n + 4], *afd);
+            return;
+        }
+    }
+    printf("\n\nATENÇÃO, O USO DEVE OCORRER DA SEGUINTES FORMAS:");
+    printf("\n\n./afdtool --complemento {nome_arquivo_afd}.txt --output {nome_arquivo_saida}.txt");
+    printf("\n./afdtool --reconhecer {nome_arquivo_afd}.txt {nome_arquivo_palavras}.txt --output {nome_arquivo_saida}.txt\n");
 }
 int main(int argc, char *argv[])
 {
@@ -285,12 +322,6 @@ int main(int argc, char *argv[])
 
     char *str;
     lerafd(&afd);
-    Decide(argv, 1, &afd);
-    if (afd.estados[1].final == 0)
-        printf("é final");
-    //escreveDot("nome.dot", afd);
-    //    char *pa = "palavras.txt";
-    //  char *sa = "resultados.txt";
-    //reconheceEscreveArquivo(pa, sa, afd);
+    Decide(argc, argv, 1, &afd);
     return 0;
 }
