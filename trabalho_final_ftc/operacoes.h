@@ -206,6 +206,7 @@ void lerafd(AFD *afd, char *nome)
         indice = 0;
         ch = getc(fp);
     }
+    fclose(fp);
 }
 
 void escreveDot(char nome[], AFD afd)
